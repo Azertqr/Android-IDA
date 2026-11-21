@@ -69,10 +69,11 @@ VIP is linked to one device. You can get it from the **VIP** tab in the app.
 
 ## Screenshots
 
-<!-- Add images to the screenshots/ folder and they will show here -->
-| Projects | IDA View | Pseudocode |
-|---|---|---|
-| ![Projects](screenshots/projects.png) | ![IDA View](screenshots/ida-view.png) | ![Pseudocode](screenshots/pseudocode.png) |
+| IDA View | Pseudocode |
+|---|---|
+| ![IDA View](screenshots/ida-view.webp) | ![Pseudocode](screenshots/pseudocode.webp) |
+| **Hex View** | **Projects** |
+| ![Hex View](screenshots/hex-view.webp) | ![Projects](screenshots/projects.webp) |
 
 ---
 
