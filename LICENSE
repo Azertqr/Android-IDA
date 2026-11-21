@@ -1,0 +1,30 @@
+Android IDA — End User License
+
+Copyright (c) 2026 Aadil (aadilmods). All rights reserved.
+
+Android IDA is proprietary, closed-source software. This repository distributes the
+compiled application (APK) and its documentation only.
+
+You MAY:
+  - download, install and use the app on your own devices;
+  - share links to this repository or its releases.
+
+You MAY NOT:
+  - redistribute modified versions of the APK, or re-upload it as your own;
+  - decompile, reverse engineer, patch or tamper with the app or its native libraries,
+    or bypass its licensing / VIP checks, except where applicable law expressly permits it;
+  - sell, rent or sublicense the app.
+
+You are responsible for using Android IDA only on software you own or are authorized
+to analyse, and for complying with the laws and licenses that apply to it.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+
+Android IDA is not affiliated with, endorsed by or connected to Hex-Rays SA or IDA Pro.
+"IDA" and "IDA Pro" are trademarks of their respective owners.
+
+Third-party components used in the app (Capstone, libcurl, mbedTLS, Firebase SDKs,
+AndroidX, OkHttp, Material Components) remain under their own licenses.
