@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/icon.png" alt="Android IDA icon" width="128" height="128">
+
 # Android IDA
 
 **ARM disassembler & decompiler for Android, right on your phone.**
@@ -11,7 +13,7 @@ Open any `.so` library, browse its functions, read ARM code, and turn it into re
 ![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&logoColor=white)
 ![ABI](https://img.shields.io/badge/ABI-arm64--v8a%20%7C%20armeabi--v7a-555)
 
-[**⬇ Download the latest APK**](https://github.com/aadilmodsofficial/Android-IDA/releases/latest)
+[**⬇ Download the latest APK**](https://github.com/aadilmodsofficial/Android-IDA/releases/latest) &nbsp;·&nbsp; [**🌐 Website**](https://app.aadilmods.com/aida/)
 
 </div>
 
@@ -60,7 +62,7 @@ Open any `.so` library, browse its functions, read ARM code, and turn it into re
 | ARM Converter | ✅ | ✅ |
 | Pseudocode (decompiler) | ❌ | ✅ |
 | Modify instruction | ❌ | ✅ |
-| Device access | free activation | ✅ always |
+| Device access | free, activate with a short link | ✅ always |
 | Ads | yes | **no ads** |
 
 VIP is linked to one device. You can get it from the **VIP** tab in the app.
@@ -77,8 +79,25 @@ VIP is linked to one device. You can get it from the **VIP** tab in the app.
 
 ---
 
+## FAQ
+
+**Why do I need to sign in and be online?**
+Your account holds your VIP and device access, so the app checks them with the server. The libraries you open stay on your phone and are never uploaded.
+
+**Android or Play Protect warns me when installing.**
+That is normal for apps installed outside Google Play. Download only from this page or the website, then choose *Install anyway*.
+
+**Which files can I open?**
+ARM ELF files: `.so` libraries (and executables) built for arm64-v8a or armeabi-v7a, for example from `lib/arm64-v8a/` inside an APK. x86 libraries are not supported.
+
+**Does it work offline?**
+Opening a library needs a connection for the access check. Saved projects keep their analysis, so they open quickly afterwards.
+
+---
+
 ## Support
 
+- 🌐 **Website:** [app.aadilmods.com/aida](https://app.aadilmods.com/aida/)
 - 🐞 **Bugs / ideas:** use *Report an issue* / *Request a feature* inside the app, or open an [issue](https://github.com/aadilmodsofficial/Android-IDA/issues)
 - 💬 **Discord:** [discord.gg/cnw8tYRRbN](https://discord.gg/cnw8tYRRbN)
 - ✈️ **Telegram:** [t.me/aadilmodsofficial](https://t.me/aadilmodsofficial)
