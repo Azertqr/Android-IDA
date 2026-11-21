@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/aadilmodsofficial/Android-IDA/main/assets/icon.png" alt="Android IDA" width="96" height="96">
+
 ## Android IDA v1.0
 
 ARM disassembler & decompiler for Android.
@@ -12,4 +14,4 @@ ARM disassembler & decompiler for Android.
 - Modify instruction and ARM Converter
 - Saved projects (`.aida`)
 
-See the [README](https://github.com/aadilmodsofficial/Android-IDA#readme) for all features.
+See the [README](https://github.com/aadilmodsofficial/Android-IDA#readme) for all features, or visit [app.aadilmods.com/aida](https://app.aadilmods.com/aida/).
