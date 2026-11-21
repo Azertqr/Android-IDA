@@ -2,9 +2,9 @@
 
 # Android IDA
 
-**ARM disassembler & decompiler for Android — on your phone.**
+**ARM disassembler & decompiler for Android, right on your phone.**
 
-Open any `.so` library, browse its functions, read ARM code, and turn it into readable C‑like pseudocode.
+Open any `.so` library, browse its functions, read ARM code, and turn it into readable C-like pseudocode.
 
 [![Release](https://img.shields.io/github/v/release/aadilmodsofficial/Android-IDA?label=latest&color=3B82F6)](https://github.com/aadilmodsofficial/Android-IDA/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/aadilmodsofficial/Android-IDA/total?color=17B5D6)](https://github.com/aadilmodsofficial/Android-IDA/releases)
@@ -20,24 +20,24 @@ Open any `.so` library, browse its functions, read ARM code, and turn it into re
 ## Features
 
 ### Analysis
-- Opens ELF shared libraries (`.so`) and executables — **arm64‑v8a**, **armeabi‑v7a (ARM & Thumb‑2)**
+- Opens ELF shared libraries (`.so`) and executables: **arm64-v8a**, **armeabi-v7a (ARM & Thumb-2)**
 - Automatic function discovery, symbols (with C++ demangling), strings, relocations, PLT stubs, xrefs
 - ELF info: header, sections, segments, dynamic table
 - Projects (`.aida`): the analysis is saved, so reopening is instant
 
 ### Views
-- **IDA View** — disassembly with names, branch targets and data references
-- **Pseudocode** *(VIP)* — C‑like decompiler for arm64, ARM and Thumb
-  - typed variables, parameters and return values (`bool`, `int`, `float`, `double`, `char *`, `std::string`, pointers …)
-  - `if` / `while` / `do‑while` / `switch` (jump tables), floating point (VFP / AArch64 FP)
-- **Hex View** — file bytes with offsets and ASCII
+- **IDA View**: disassembly with names, branch targets and data references
+- **Pseudocode** *(VIP)*: C-like decompiler for arm64, ARM and Thumb
+  - typed variables, parameters and return values (`bool`, `int`, `float`, `double`, `char *`, `std::string`, pointers, etc.)
+  - `if` / `while` / `do-while` / `switch` (jump tables), floating point (VFP / AArch64 FP)
+- **Hex View**: file bytes with offsets and ASCII
 - **Strings**, **Names**, **Relocations**, **ELF Info**
 - Split view, focus mode, synchronized cursor across all views
 - Tap a word to highlight it everywhere (registers, variables, names); fast scrollbar on every list
 
 ### Patching
-- **Modify instruction** *(VIP)* — return a fixed `bool` / `int` / `int64` / `float` / `double`, NOP, always / never jump, invert a condition, skip a call, or any custom ARM code
-- **ARM Converter** — ARM ⇄ hex for arm64, ARM and Thumb, with the instruction address for correct branch targets
+- **Modify instruction** *(VIP)*: return a fixed `bool` / `int` / `int64` / `float` / `double`, NOP, always / never jump, invert a condition, skip a call, or any custom ARM code
+- **ARM Converter**: ARM to hex and back for arm64, ARM and Thumb, with the instruction address for correct branch targets
 - Copy bytes as hex or as a C++ array, save function offsets
 
 ---
@@ -48,7 +48,7 @@ Open any `.so` library, browse its functions, read ARM code, and turn it into re
 2. Open it on your phone and allow *Install unknown apps* for your browser / file manager if Android asks.
 3. Sign in with Google.
 
-**Requirements:** Android 7.0 (API 24) or newer, an ARM phone (arm64 or 32‑bit ARM), internet connection.
+**Requirements:** Android 7.0 (API 24) or newer, an ARM phone (arm64 or 32-bit ARM), internet connection.
 
 ---
 
@@ -58,8 +58,8 @@ Open any `.so` library, browse its functions, read ARM code, and turn it into re
 |---|:---:|:---:|
 | IDA View, Hex View, Strings, Names, ELF Info, Relocations | ✅ | ✅ |
 | ARM Converter | ✅ | ✅ |
-| Pseudocode (decompiler) | — | ✅ |
-| Modify instruction | — | ✅ |
+| Pseudocode (decompiler) | ❌ | ✅ |
+| Modify instruction | ❌ | ✅ |
 | Device access | free activation | ✅ always |
 | Ads | yes | **no ads** |
 
@@ -88,7 +88,7 @@ VIP is linked to one device. You can get it from the **VIP** tab in the app.
 ## Notice
 
 Android IDA is **closed source**; this repository only hosts releases and documentation.
-It is an independent project and is **not affiliated with Hex‑Rays or IDA Pro**.
+It is an independent project and is **not affiliated with Hex-Rays or IDA Pro**.
 Use it only on software you own or are allowed to analyse.
 
 See [LICENSE](LICENSE) for the terms of use.
