@@ -1,0 +1,110 @@
+name: Patch IDA APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APK from release
+        run: |
+          curl -L "https://github.com/aadilmodsofficial/Android-IDA/releases/download/v1.0/Android_IDA_v1.0_Official.apk" \
+               -o original.apk
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Patch libadcore.so
+        run: |
+          python3 << 'EOF'
+          import zipfile, shutil, os, struct
+
+          # arm64 patch bytes
+          # mov w0, #1  =  20 00 80 52
+          # ret         =  c0 03 5f d6
+          PATCH = bytes([0x20, 0x00, 0x80, 0x52, 0xC0, 0x03, 0x5F, 0xD6])
+
+          TARGETS = {
+              # (file_offset_in_so, length_to_overwrite)
+              'nativeCheckAccess':  (0x0026CA44, 8),
+              'nativeGateOpen':     (0x0026C6BC, 8),
+          }
+
+          SO_PATH_IN_APK = 'lib/arm64-v8a/libadcore.so'
+
+          # extract
+          shutil.copy('original.apk', 'patched.apk')
+          with zipfile.ZipFile('original.apk', 'r') as z:
+              so_data = bytearray(z.read(SO_PATH_IN_APK))
+
+          # validate SO identity
+          assert so_data[:4] == b'\x7fELF', "not an ELF"
+          assert len(so_data) == 3916136, f"unexpected SO size {len(so_data)}, wrong build?"
+
+          # validate original bytes before patching
+          ORIGINALS = {
+              'nativeCheckAccess': bytes([0xFD, 0x7B, 0xBF, 0xA9, 0xFD, 0x03, 0x00, 0x91]),
+              'nativeGateOpen':    bytes([0xC8, 0x0A, 0x00, 0x90, 0x08, 0xC1, 0x32, 0x91]),
+          }
+
+          for name, (off, length) in TARGETS.items():
+              orig = ORIGINALS[name]
+              found = bytes(so_data[off:off+8])
+              assert found == orig, \
+                  f"ABORT: {name} @ 0x{off:08x}: expected {orig.hex()} got {found.hex()} — wrong build!"
+              so_data[off:off+length] = PATCH[:length]
+              print(f"[+] patched {name} @ 0x{off:08x}")
+
+          # write patched SO back into APK
+          import io
+          with zipfile.ZipFile('original.apk', 'r') as zin:
+              with zipfile.ZipFile('patched_unsigned.apk', 'w', zipfile.ZIP_DEFLATED) as zout:
+                  for item in zin.infolist():
+                      if item.filename == SO_PATH_IN_APK:
+                          zout.writestr(item, bytes(so_data))
+                          print(f"[+] replaced {SO_PATH_IN_APK} in APK")
+                      else:
+                          zout.writestr(item, zin.read(item.filename))
+
+          print("[+] patched_unsigned.apk written")
+          EOF
+
+      - name: Install build tools
+        run: |
+          sudo apt-get install -y zipalign apksigner
+          # generate a throwaway signing key
+          keytool -genkeypair \
+            -alias patch \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 9999 \
+            -keystore patch.jks \
+            -storepass patchkey \
+            -keypass patchkey \
+            -dname "CN=patch, OU=patch, O=patch, L=patch, S=patch, C=US" \
+            -noprompt
+
+      - name: Zipalign
+        run: |
+          zipalign -v -p 4 patched_unsigned.apk patched_aligned.apk
+
+      - name: Sign APK
+        run: |
+          apksigner sign \
+            --ks patch.jks \
+            --ks-key-alias patch \
+            --ks-pass pass:patchkey \
+            --key-pass pass:patchkey \
+            --out patched_signed.apk \
+            patched_aligned.apk
+          apksigner verify patched_signed.apk && echo "[+] signature OK"
+
+      - name: Upload patched APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Android-IDA-patched
+          path: patched_signed.apk
+          retention-days: 7
