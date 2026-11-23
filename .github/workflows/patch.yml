@@ -7,7 +7,7 @@ jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
-      - name: Download APK from release
+      - name: Download APK
         run: |
           curl -L "https://github.com/aadilmodsofficial/Android-IDA/releases/download/v1.0/Android_IDA_v1.0_Official.apk" \
                -o original.apk
@@ -17,92 +17,110 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Patch libadcore.so
+      - name: Patch APK
         run: |
           python3 << 'EOF'
-          import zipfile, shutil, os, struct
+          import zipfile, shutil, struct
 
-          # arm64 patch bytes
+          # ── arm64 patch ──────────────────────────────────────────────
           # mov w0, #1  =  20 00 80 52
           # ret         =  c0 03 5f d6
-          PATCH = bytes([0x20, 0x00, 0x80, 0x52, 0xC0, 0x03, 0x5F, 0xD6])
+          PATCH_RET1 = bytes([0x20, 0x00, 0x80, 0x52, 0xC0, 0x03, 0x5F, 0xD6])
 
-          TARGETS = {
-              # (file_offset_in_so, length_to_overwrite)
-              'nativeCheckAccess':  (0x0026CA44, 8),
-              'nativeGateOpen':     (0x0026C6BC, 8),
+          SO_PATCHES = {
+              'nativeCheckAccess': (0x0026CA44, bytes([0xFD,0x7B,0xBF,0xA9,0xFD,0x03,0x00,0x91])),
+              'nativeGateOpen':    (0x0026C6BC, bytes([0xC8,0x0A,0x00,0x90,0x08,0xC1,0x32,0x91])),
           }
+          SO_PATH = 'lib/arm64-v8a/libadcore.so'
 
-          SO_PATH_IN_APK = 'lib/arm64-v8a/libadcore.so'
+          # ── dalvik patch — LoginActivity.onCreate bypass ──────────────
+          # Replace first 4 bytes of insns with:
+          #   return-void  (0e 00)  +  nop (00 00)
+          # This makes onCreate do nothing → app crashes to HomeActivity? No.
+          # Better: patch ll1l (the post-login nav method) to always proceed.
+          # ll1l @ insns_off = code_off(0x002a87b8) + 16 = 0x002a87c8
+          # First insn: const/4 v0, #0  (12 00) → patch to const/4 v0, #1  (12 10)
+          # This flips the null-check so it thinks login already succeeded
+          # then it calls HomeActivity directly.
+          DEX_PATCHES = [
+              # (file_offset_in_dex, original_bytes, patch_bytes, label)
+              (0x002a87c8, bytes([0x12, 0x00]), bytes([0x12, 0x10]), 'll1l: flip null-check → assume logged in'),
+          ]
+          DEX_PATH = 'classes.dex'
 
-          # extract
-          shutil.copy('original.apk', 'patched.apk')
+          # ── read originals ───────────────────────────────────────────
           with zipfile.ZipFile('original.apk', 'r') as z:
-              so_data = bytearray(z.read(SO_PATH_IN_APK))
+              so_data  = bytearray(z.read(SO_PATH))
+              dex_data = bytearray(z.read(DEX_PATH))
 
-          # validate SO identity
-          assert so_data[:4] == b'\x7fELF', "not an ELF"
-          assert len(so_data) == 3916136, f"unexpected SO size {len(so_data)}, wrong build?"
+          # validate SO
+          assert so_data[:4] == b'\x7fELF', "SO magic mismatch"
+          assert len(so_data) == 3916136, f"SO size mismatch: {len(so_data)}"
 
-          # validate original bytes before patching
-          ORIGINALS = {
-              'nativeCheckAccess': bytes([0xFD, 0x7B, 0xBF, 0xA9, 0xFD, 0x03, 0x00, 0x91]),
-              'nativeGateOpen':    bytes([0xC8, 0x0A, 0x00, 0x90, 0x08, 0xC1, 0x32, 0x91]),
-          }
-
-          for name, (off, length) in TARGETS.items():
-              orig = ORIGINALS[name]
+          for name, (off, orig) in SO_PATCHES.items():
               found = bytes(so_data[off:off+8])
-              assert found == orig, \
-                  f"ABORT: {name} @ 0x{off:08x}: expected {orig.hex()} got {found.hex()} — wrong build!"
-              so_data[off:off+length] = PATCH[:length]
-              print(f"[+] patched {name} @ 0x{off:08x}")
+              assert found == orig, f"ABORT {name} @ 0x{off:08x}: got {found.hex()}"
+              so_data[off:off+8] = PATCH_RET1
+              print(f"[+] SO patched: {name} @ 0x{off:08x}")
 
-          # write patched SO back into APK
-          import io
+          # validate + apply dex patches
+          for (off, orig, patch, label) in DEX_PATCHES:
+              found = bytes(dex_data[off:off+len(orig)])
+              assert found == orig, f"ABORT dex @ 0x{off:08x} [{label}]: got {found.hex()}"
+              dex_data[off:off+len(patch)] = patch
+              print(f"[+] DEX patched: {label} @ 0x{off:08x}")
+
+          # fix dex checksum and SHA-1
+          import hashlib, struct as st
+          # SHA-1 covers bytes [32..end]
+          sha1 = hashlib.sha1(bytes(dex_data[32:])).digest()
+          dex_data[8:28] = sha1
+          # Adler-32 covers bytes [12..end]
+          import zlib
+          adler = zlib.adler32(bytes(dex_data[12:])) & 0xffffffff
+          st.pack_into('<I', dex_data, 8, adler)
+          # re-do: adler at offset 8, sha1 at offset 12
+          adler = zlib.adler32(bytes(dex_data[12:])) & 0xffffffff
+          struct.pack_into = st.pack_into
+          st.pack_into('<I', dex_data, 8, adler)
+          sha1 = hashlib.sha1(bytes(dex_data[32:])).digest()
+          dex_data[12:32] = sha1
+          print("[+] DEX checksum + SHA-1 updated")
+
+          # repack APK
           with zipfile.ZipFile('original.apk', 'r') as zin:
               with zipfile.ZipFile('patched_unsigned.apk', 'w', zipfile.ZIP_DEFLATED) as zout:
                   for item in zin.infolist():
-                      if item.filename == SO_PATH_IN_APK:
+                      if item.filename == SO_PATH:
                           zout.writestr(item, bytes(so_data))
-                          print(f"[+] replaced {SO_PATH_IN_APK} in APK")
+                      elif item.filename == DEX_PATH:
+                          zout.writestr(item, bytes(dex_data))
                       else:
                           zout.writestr(item, zin.read(item.filename))
-
-          print("[+] patched_unsigned.apk written")
+          print("[+] patched_unsigned.apk done")
           EOF
 
-      - name: Install build tools
+      - name: Install tools
+        run: sudo apt-get install -y zipalign apksigner
+
+      - name: Generate signing key
         run: |
-          sudo apt-get install -y zipalign apksigner
-          # generate a throwaway signing key
           keytool -genkeypair \
-            -alias patch \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 9999 \
-            -keystore patch.jks \
-            -storepass patchkey \
-            -keypass patchkey \
-            -dname "CN=patch, OU=patch, O=patch, L=patch, S=patch, C=US" \
+            -alias patch -keyalg RSA -keysize 2048 -validity 9999 \
+            -keystore patch.jks -storepass patchkey -keypass patchkey \
+            -dname "CN=patch,OU=patch,O=patch,L=patch,S=patch,C=US" \
             -noprompt
 
-      - name: Zipalign
+      - name: Zipalign + Sign
         run: |
           zipalign -v -p 4 patched_unsigned.apk patched_aligned.apk
-
-      - name: Sign APK
-        run: |
           apksigner sign \
-            --ks patch.jks \
-            --ks-key-alias patch \
-            --ks-pass pass:patchkey \
-            --key-pass pass:patchkey \
-            --out patched_signed.apk \
-            patched_aligned.apk
+            --ks patch.jks --ks-key-alias patch \
+            --ks-pass pass:patchkey --key-pass pass:patchkey \
+            --out patched_signed.apk patched_aligned.apk
           apksigner verify patched_signed.apk && echo "[+] signature OK"
 
-      - name: Upload patched APK
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: Android-IDA-patched
